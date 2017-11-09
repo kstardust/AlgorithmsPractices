@@ -24,6 +24,8 @@ def quick_sort(array, begin, end):
         quick_sort(array, p+1, end)
 
 def partition(array, begin, end):
+    random_index = np.random.randint(begin, end+1)
+    array[end], array[random_index] = array[random_index], array[end]
     pivot = array[end]
     i = begin - 1
     for j in range(begin, end):
