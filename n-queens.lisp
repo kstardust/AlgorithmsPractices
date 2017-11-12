@@ -1,0 +1,25 @@
+(defun _n-queues (A m n)
+  (let ((counter 0))
+    (cond
+      ((eql m n) (print A) (incf counter))
+      (t (do ((i 0 (1+ i)))
+	     ((eql i n))
+	   (let ((c 0))
+	     (do ((j 0 (1+ j)))
+		 ((eql j m))
+	       (let ((x (nth 0 (aref A j)))
+		     (y (nth 1 (aref A j))))
+		 (cond ((eql y i))
+		       ((eql (abs (- x m)) (abs (- y i))))
+		       (t (incf c)))))
+	     (cond ((eql c m)
+		    (setf (aref A m) `(,m ,i))
+		    (incf counter (_n-queues A (1+ m) n))))))))
+    counter))
+
+(defun n-queues (n)
+  (let ((A (make-array n :initial-element '(0 0))))
+    (_n-queues A 0 n)))
+
+(print (n-queues 8))
+
