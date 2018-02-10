@@ -31,10 +31,14 @@ create_tree()
 }
 
 void
-t_tree_free(T_tree* tree)
+t_tree_free(T_tree* t_tree_p)
 {
+    T_tree tree = *t_tree_p;
+    if (tree) {
     //
-    *tree = NULL;
+        free(tree);
+        *t_tree_p = NULL;
+    }
 }
 
 T_node
@@ -123,7 +127,7 @@ void
 t_delete(T_tree tree, T_node* nodep)
 {
     T_node node = *nodep;
-    if (node) {    
+    if (node && node != tree->t_nil) {    
         if (node->left == tree->t_nil) {
             t_transplant(tree, node, node->right);
         } else if (node->right == tree->t_nil) {
@@ -145,26 +149,10 @@ t_delete(T_tree tree, T_node* nodep)
 }
 
 T_node
-_t_maximum(T_node p, T_node tnil)
-{
-    while (p->right != tnil)
-        p = p->right;
-    return p;
-}
-
-T_node
 t_maximum(T_tree tree)
 {
     T_node p = tree->root;
     return _t_maximum(p, tree->t_nil);
-}
-
-T_node
-_t_minimum(T_node p, T_node tnil)
-{
-    while (p->left != tnil)
-        p = p->left;
-    return p;
 }
 
 T_node
@@ -173,6 +161,58 @@ t_minimum(T_tree tree)
     T_node p = tree->root;
     return _t_minimum(p, tree->t_nil);
 }
+
+void
+t_left_rotate(T_tree tree, T_node node)
+{
+    if (node && node != tree->t_nil) {
+        T_node right = node->right;
+        
+        if (right == tree->t_nil)
+            return;
+        
+        node->right = right->left;
+        if (right->left != tree->t_nil)
+            right->left->p = node;
+        
+        right->p = node->p;
+        if (node->p == tree->t_nil) {
+            tree->root = right;
+        } else if (node == node->p->right) {
+            node->p->right = right;
+        } else {
+            node->p->left = right;
+        }
+        node->p = right;
+        right->left = node;
+    }
+}
+
+void
+t_right_rotate(T_tree tree, T_node node)
+{
+    if (node && node != tree->t_nil) {
+        T_node left = node->left;
+        if (left == tree->t_nil)
+            return;
+
+        node->left = left->right;
+        if(left->right != tree->t_nil)
+            left->right->p = node;
+
+        left->p = node->p;
+        if (node->p == tree->t_nil) {
+            tree->root = left;
+        } else if (node == node->p->right) {
+            node->p->right = left;
+        } else {
+            node->p->left = left;
+        }
+        node->p = left;
+        left->right = node;
+    }
+}
+
 
 void
 _print_tree_preorder(T_node node, T_node tnil)
@@ -189,5 +229,21 @@ print_tree_preorder(T_tree tree)
 {
     T_node node = tree->root;
     _print_tree_preorder(node, tree->t_nil);
+}
+
+T_node
+_t_maximum(T_node p, T_node tnil)
+{
+    while (p->right != tnil)
+        p = p->right;
+    return p;
+}
+
+T_node
+_t_minimum(T_node p, T_node tnil)
+{
+    while (p->left != tnil)
+        p = p->left;
+    return p;
 }
 

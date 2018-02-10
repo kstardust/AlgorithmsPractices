@@ -27,6 +27,8 @@ T_node t_maximum(T_tree tree);
 T_node t_minimum(T_tree tree);
 T_node t_predecessor(T_tree tree, T_node node);
 T_node t_successor(T_tree tree, T_node node);
+void t_left_rotate(T_tree tree, T_node node);
+void t_right_rotate(T_tree tree, T_node node);
 void t_transplant(T_tree tree, T_node v, T_node u);
 void t_delete(T_tree tree, T_node* node);
 void t_tree_free(T_tree* tree);
