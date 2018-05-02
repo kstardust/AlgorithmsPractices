@@ -8,6 +8,7 @@
 
 T_node _t_maximum(T_node p, T_node tnil);
 T_node _t_minimum(T_node p, T_node tnil);
+void rbt_insert_fix(T_tree tree, T_node node);
 
 void*
 t_malloc(size_t size)
@@ -31,14 +32,10 @@ create_tree()
 }
 
 void
-t_tree_free(T_tree* t_tree_p)
+t_tree_free(T_tree* tree)
 {
-    T_tree tree = *t_tree_p;
-    if (tree) {
     //
-        free(tree);
-        *t_tree_p = NULL;
-    }
+    *tree = NULL;
 }
 
 T_node
@@ -127,7 +124,7 @@ void
 t_delete(T_tree tree, T_node* nodep)
 {
     T_node node = *nodep;
-    if (node && node != tree->t_nil) {    
+    if (node) {    
         if (node->left == tree->t_nil) {
             t_transplant(tree, node, node->right);
         } else if (node->right == tree->t_nil) {
@@ -149,10 +146,26 @@ t_delete(T_tree tree, T_node* nodep)
 }
 
 T_node
+_t_maximum(T_node p, T_node tnil)
+{
+    while (p->right != tnil)
+        p = p->right;
+    return p;
+}
+
+T_node
 t_maximum(T_tree tree)
 {
     T_node p = tree->root;
     return _t_maximum(p, tree->t_nil);
+}
+
+T_node
+_t_minimum(T_node p, T_node tnil)
+{
+    while (p->left != tnil)
+        p = p->left;
+    return p;
 }
 
 T_node
@@ -163,62 +176,121 @@ t_minimum(T_tree tree)
 }
 
 void
-t_left_rotate(T_tree tree, T_node node)
+t_left_rotate(T_tree tree, T_node x)
 {
-    if (node && node != tree->t_nil) {
-        T_node right = node->right;
-        
-        if (right == tree->t_nil)
-            return;
-        
-        node->right = right->left;
-        if (right->left != tree->t_nil)
-            right->left->p = node;
-        
-        right->p = node->p;
-        if (node->p == tree->t_nil) {
-            tree->root = right;
-        } else if (node == node->p->right) {
-            node->p->right = right;
-        } else {
-            node->p->left = right;
-        }
-        node->p = right;
-        right->left = node;
+    T_node y = x->right;
+    if ( y == tree->t_nil)
+        return;
+    
+    x->right = y->left;
+    if (y->left != tree->t_nil) {
+        y->left->p = x;
     }
+    y->p = x->p;
+    if (x->p == tree->t_nil) {
+        tree->root = y;
+    } else if (x == x->p->left) {
+        x->p->left = y;
+    } else {
+        x->p->right = y;
+    }
+    y->left = x;
+    x->p = y;
 }
 
 void
-t_right_rotate(T_tree tree, T_node node)
+t_right_rotate(T_tree tree, T_node x)
 {
-    if (node && node != tree->t_nil) {
-        T_node left = node->left;
-        if (left == tree->t_nil)
-            return;
-
-        node->left = left->right;
-        if(left->right != tree->t_nil)
-            left->right->p = node;
-
-        left->p = node->p;
-        if (node->p == tree->t_nil) {
-            tree->root = left;
-        } else if (node == node->p->right) {
-            node->p->right = left;
-        } else {
-            node->p->left = left;
-        }
-        node->p = left;
-        left->right = node;
+    T_node y = x->left;
+    if ( y == tree->t_nil)
+        return;
+    
+    x->left = y->right;
+    if (y->right != tree->t_nil) {
+        y->right->p = x;
     }
+    y->p = x->p;
+    if (x->p == tree->t_nil) {
+        tree->root = y;
+    } else if (x == x->p->left) {
+        x->p->left = y;
+    } else {
+        x->p->right = y;
+    }
+    y->right = x;
+    x->p = y;
+}    
+
+T_node
+rbt_insert(T_tree tree, int k)
+{
+    T_node node = t_insert(tree, k);
+    node->rbt_color = RBT_COLOR_RED;
+    rbt_insert_fix(tree, node);
+    return node;
 }
 
+void
+rbt_insert_fix(T_tree tree, T_node node)
+{
+    while (node->p->rbt_color == RBT_COLOR_RED) {
+        if (node->p == node->p->p->left) {
+            T_node sibling = node->p->p->right;
+            if (sibling->rbt_color == RBT_COLOR_RED) {
+                node->p->rbt_color = RBT_COLOR_BLACK;
+                sibling->rbt_color = RBT_COLOR_BLACK;
+                node->p->p->rbt_color = RBT_COLOR_RED;
+                node = node->p->p;
+            } else {
+                if (node == node->p->right) {
+                    node = node->p;
+                    t_left_rotate(tree, node);
+                }
+                node->p->rbt_color = RBT_COLOR_BLACK;
+                node->p->p->rbt_color = RBT_COLOR_RED;
+                t_right_rotate(tree, node->p->p);
+            }
+        } else {
+            if (node->p == node->p->p->right) {
+                T_node sibling = node->p->p->left;
+                if (sibling->rbt_color == RBT_COLOR_RED) {
+                    node->p->rbt_color = RBT_COLOR_BLACK;
+                    sibling->rbt_color = RBT_COLOR_BLACK;
+                    node->p->p->rbt_color = RBT_COLOR_RED;
+                    node = node->p->p;
+                } else {
+                    if (node == node->p->left) {
+                        node = node->p;
+                        t_right_rotate(tree, node);
+                    }
+                    node->p->rbt_color = RBT_COLOR_BLACK;
+                    node->p->p->rbt_color = RBT_COLOR_RED;
+                    t_left_rotate(tree, node->p->p);
+                }
+            }
+        }
+    }
+    tree->root->rbt_color = RBT_COLOR_BLACK;
+}
+
+char* color_helper(int color)
+{
+    switch(color) {
+    case RBT_COLOR_BLACK:
+        return "black";
+    case RBT_COLOR_RED:
+        return "red";
+    default:
+        return "undefined";
+    }
+}
 
 void
 _print_tree_preorder(T_node node, T_node tnil)
 {
     if (node != tnil) {
-        printf("%d\n", node->v);
+        printf("%d color: %s\n",
+               node->v, color_helper(node->rbt_color));
         _print_tree_preorder(node->left, tnil);
         _print_tree_preorder(node->right, tnil);
     }
@@ -231,19 +303,21 @@ print_tree_preorder(T_tree tree)
     _print_tree_preorder(node, tree->t_nil);
 }
 
-T_node
-_t_maximum(T_node p, T_node tnil)
+void
+_print_tree_inorder(T_node node, T_node tnil)
 {
-    while (p->right != tnil)
-        p = p->right;
-    return p;
+    if (node != tnil) {
+        _print_tree_inorder(node->left, tnil);
+        printf("%d color: %s\n",
+               node->v, color_helper(node->rbt_color));
+        _print_tree_inorder(node->right, tnil);
+    }
 }
 
-T_node
-_t_minimum(T_node p, T_node tnil)
+void
+print_tree_inorder(T_tree tree)
 {
-    while (p->left != tnil)
-        p = p->left;
-    return p;
+    T_node node = tree->root;
+    _print_tree_inorder(node, tree->t_nil);
 }
 

@@ -15,8 +15,9 @@ int main(int argc, char **argv)
 
     for (int i = 0; i < 5; i++) {
         printf("--%d\n", arra[i]);
-        T_node node = t_search(tree, arra[i]);
-        t_delete(tree, &node);
+                T_node node = t_search(tree, arra[i]);
+                t_left_rotate(tree, node);
+        //        t_delete(tree, &node);
     }
     
     printf("-----\n");
