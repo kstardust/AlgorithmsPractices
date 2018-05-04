@@ -4,9 +4,6 @@
 #define RBT_COLOR_BLACK 0x1
 #define RBT_COLOR_RED   0x2
 
-#define TR_LEFT  0x1
-#define TR_RIGHT 0x2
-
 struct t_node;
 struct t_tree;
 
@@ -46,11 +43,11 @@ void t_transplant(T_tree tree, T_node v, T_node u);
 void t_left_rotate(T_tree tree, T_node x);
 void t_right_rotate(T_tree tree, T_node x);
 
-void t_delete(T_tree tree, T_node* node);
+void t_delete(T_tree tree, T_node* nodep);
 void t_tree_free(T_tree* tree);
 
 T_node rbt_insert(T_tree tree, int k);
-
+void rbt_delete(T_tree tree, T_node* nodep);
 void print_tree_preorder(T_tree tree);
 void print_tree_inorder(T_tree tree);
 

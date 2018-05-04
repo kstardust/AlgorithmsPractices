@@ -9,6 +9,7 @@
 T_node _t_maximum(T_node p, T_node tnil);
 T_node _t_minimum(T_node p, T_node tnil);
 void rbt_insert_fix(T_tree tree, T_node node);
+void rbt_delete_fix(T_tree tree, T_node node);
 
 void*
 t_malloc(size_t size)
@@ -28,6 +29,7 @@ create_tree()
     bzero(nil_node, sizeof(struct t_node));
     tree->t_nil = nil_node;
     tree->root = nil_node;
+    tree->t_nil->rbt_color = RBT_COLOR_BLACK;
     return tree;
 }
 
@@ -263,7 +265,7 @@ rbt_insert_fix(T_tree tree, T_node node)
                         node = node->p;
                         t_right_rotate(tree, node);
                     }
-                    node->p->rbt_color = RBT_COLOR_BLACK;
+                    node->p->rbt_color    = RBT_COLOR_BLACK;
                     node->p->p->rbt_color = RBT_COLOR_RED;
                     t_left_rotate(tree, node->p->p);
                 }
@@ -271,6 +273,104 @@ rbt_insert_fix(T_tree tree, T_node node)
         }
     }
     tree->root->rbt_color = RBT_COLOR_BLACK;
+}
+
+void
+rbt_delete(T_tree tree, T_node* nodep)
+{
+    T_node node = *nodep;
+    T_node x, y;
+    y = node;
+    int y_original_color = y->rbt_color;
+    
+    if (node) {
+        if (node->left == tree->t_nil) {
+            x = node->right;
+            t_transplant(tree, node, node->right);
+        } else if (node->right == tree->t_nil) {
+            x = node->left;
+            t_transplant(tree, node, node->left);
+        } else {
+            y = _t_minimum(node->right, tree->t_nil);
+            y_original_color = y->rbt_color;
+            x = y->right;
+            if (y->p == node) {
+                x->p = y;
+            } else {
+                t_transplant(tree, y, y->right);
+                y->right = node->right;
+                y->right->p = y;
+            }
+            t_transplant(tree, node, y);
+            y->left = node->left;
+            y->left->p = y;
+            y->rbt_color = node->rbt_color;
+        }
+        if (y_original_color == RBT_COLOR_BLACK) {
+            rbt_delete_fix(tree, x);
+        }
+        free(node);
+        *nodep = NULL;
+    }
+}
+
+void
+rbt_delete_fix(T_tree tree, T_node node)
+{
+    while (node != tree->root && node->rbt_color == RBT_COLOR_BLACK) {
+        if (node == node->p->left) {
+            T_node sibling = node->p->right;
+            if (sibling->rbt_color == RBT_COLOR_RED) {
+                sibling->rbt_color = RBT_COLOR_BLACK;
+                node->p->rbt_color = RBT_COLOR_RED;
+                t_left_rotate(tree, node->p);
+                sibling = node->p->right;
+            }
+            if (sibling->right->rbt_color == RBT_COLOR_BLACK &&
+                sibling->left->rbt_color == RBT_COLOR_BLACK) {
+                sibling->rbt_color = RBT_COLOR_RED;
+                node = node->p;
+            } else {
+                if (sibling->right->rbt_color == RBT_COLOR_BLACK) {
+                    sibling->rbt_color       = RBT_COLOR_RED;
+                    sibling->left->rbt_color = RBT_COLOR_BLACK;
+                    t_right_rotate(tree, sibling);
+                    sibling = node->p->right;
+                }
+                sibling->rbt_color        = node->p->rbt_color;
+                sibling->right->rbt_color = RBT_COLOR_BLACK;
+                node->p->rbt_color        = RBT_COLOR_BLACK;
+                t_left_rotate(tree, node->p);
+                node = tree->root;
+            }
+        } else {
+            T_node sibling = node->p->left;
+            if (sibling->rbt_color == RBT_COLOR_RED) {
+                sibling->rbt_color = RBT_COLOR_BLACK;
+                node->p->rbt_color = RBT_COLOR_RED;
+                t_right_rotate(tree, node->p);
+                sibling = node->p->left;
+            }
+            if (sibling->right->rbt_color == RBT_COLOR_BLACK &&
+                sibling->left->rbt_color == RBT_COLOR_BLACK) {
+                sibling->rbt_color = RBT_COLOR_RED;
+                node = node->p;
+            } else {
+                if (sibling->left->rbt_color == RBT_COLOR_BLACK) {
+                    sibling->rbt_color        = RBT_COLOR_RED;
+                    sibling->right->rbt_color = RBT_COLOR_BLACK;
+                    t_left_rotate(tree, sibling);
+                    sibling = node->p->left;
+                }
+                sibling->rbt_color       = node->p->rbt_color;
+                sibling->left->rbt_color = RBT_COLOR_BLACK;
+                node->p->rbt_color       = RBT_COLOR_BLACK;
+                t_right_rotate(tree, node->p);
+                node = tree->root;
+            }
+        }
+    }
+    node->rbt_color = RBT_COLOR_BLACK;
 }
 
 char* color_helper(int color)
