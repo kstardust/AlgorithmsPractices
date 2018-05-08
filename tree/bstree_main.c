@@ -17,18 +17,22 @@ int main(int argc, char **argv)
     
     /* exit(0); */
     
-    T_tree tree = create_tree();
+    T_tree tree = create_tree(TYPE_RB_TREE);
     T_node n, m;
-    T_node arra[10000];
-    for (int i = 0; i < 10000; i++) {
-        int k = arc4random() % 100000;
+    int arra[10] = {12, 52, 1, 47, 14, 59, 64, 79, 30, 69};
+    for (int i = 0; i < 10; i++) {
+        int k = arc4random() % 200;
+        //    printf("%d\n",k);
         //        arra[i] = k;
-        /* if (arra[i] == 57) */
-        /*     n = rbt_insert(tree, arra[i]); */
-        /* else */
-        /*     rbt_insert(tree, arra[i]); */
-        arra[i] = rbt_insert(tree, k);
+        if (arra[i] == 12)
+            n = rbt_insert(tree, arra[i]);
+        else if (arra[i] == 30)
+            m = t_insert(tree, arra[i]);
+        else
+            t_insert(tree, arra[i]);
     }
+    t_delete(tree, &m);
+    t_delete(tree, &n);
     //    t_right_rotate(tree, n);
     /* for (int i = 0; i < 5; i++) { */
     /*     printf("--%d\n", arra[i]); */
@@ -36,12 +40,12 @@ int main(int argc, char **argv)
     /*     t_delete(tree, &node); */
     /* } */
     
-    for (int i = 0; i < 10000; i++ ) {
-        int k = arc4random() % 10000;
-        if (k > 10) {
-            rbt_delete(tree, arra+i);
-        }
-    }
+    /* for (int i = 0; i < 1000000; i++ ) { */
+    /*     int k = arc4random() % 100000; */
+    /*     if (k > 10) { */
+    /*         rbt_delete(tree, arra+i); */
+    /*     } */
+    /* } */
     
     printf("-----pre\n");
     print_tree_preorder(tree);

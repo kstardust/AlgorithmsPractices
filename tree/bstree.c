@@ -10,6 +10,8 @@ T_node _t_maximum(T_node p, T_node tnil);
 T_node _t_minimum(T_node p, T_node tnil);
 void rbt_insert_fix(T_tree tree, T_node node);
 void rbt_delete_fix(T_tree tree, T_node node);
+void avl_insert_fix(T_tree tree, T_node node);
+void avl_delete_fix(T_tree tree, T_node node);
 
 void*
 t_malloc(size_t size)
@@ -22,17 +24,51 @@ t_malloc(size_t size)
 }
 
 T_tree
-create_tree()
+create_tree(int type)
 {
     T_tree tree = (T_tree)t_malloc(sizeof(struct t_tree));
     T_node nil_node = (T_node)t_malloc(sizeof(struct t_node));
     bzero(nil_node, sizeof(struct t_node));
     tree->t_nil = nil_node;
     tree->root = nil_node;
-    tree->t_nil->rbt_color = RBT_COLOR_BLACK;
+    tree->type = type;
+    if (type == TYPE_RB_TREE)
+        tree->t_nil->rbt_color = RBT_COLOR_BLACK;
+    else if (type == TYPE_AVL_TREE)
+        tree->t_nil->avl_bf = AVL_BALANCED;
+    
     return tree;
 }
 
+T_node
+t_insert(T_tree tree, int k)
+{
+    switch (tree->type) {
+    case TYPE_RB_TREE:
+        return rbt_insert(tree, k);
+    case TYPE_AVL_TREE:
+        return avl_insert(tree, k);
+    default:
+        return bst_insert(tree, k);
+    }
+}
+
+void
+t_delete(T_tree tree, T_node* nodep)
+{
+    switch (tree->type) {
+    case TYPE_RB_TREE:
+        rbt_delete(tree, nodep);
+        break;
+    case TYPE_AVL_TREE:
+        avl_delete(tree, nodep);
+        break;
+    default:
+        bst_delete(tree, nodep);
+        break;
+    }
+}
+    
 void
 t_tree_free(T_tree* tree)
 {
@@ -54,7 +90,7 @@ t_search(T_tree tree, int k)
 }
 
 T_node
-t_insert(T_tree tree, int k)
+bst_insert(T_tree tree, int k)
 {
     T_node node = (T_node)t_malloc(sizeof(struct t_node));
     node->v = k;
@@ -123,7 +159,7 @@ t_transplant(T_tree tree, T_node u, T_node v)
 }
 
 void
-t_delete(T_tree tree, T_node* nodep)
+bst_delete(T_tree tree, T_node* nodep)
 {
     T_node node = *nodep;
     if (node) {    
@@ -177,12 +213,12 @@ t_minimum(T_tree tree)
     return _t_minimum(p, tree->t_nil);
 }
 
-void
+T_node
 t_left_rotate(T_tree tree, T_node x)
 {
     T_node y = x->right;
     if ( y == tree->t_nil)
-        return;
+        return x;
     
     x->right = y->left;
     if (y->left != tree->t_nil) {
@@ -198,14 +234,16 @@ t_left_rotate(T_tree tree, T_node x)
     }
     y->left = x;
     x->p = y;
+
+    return y;
 }
 
-void
+T_node
 t_right_rotate(T_tree tree, T_node x)
 {
     T_node y = x->left;
     if ( y == tree->t_nil)
-        return;
+        return x;
     
     x->left = y->right;
     if (y->right != tree->t_nil) {
@@ -221,12 +259,14 @@ t_right_rotate(T_tree tree, T_node x)
     }
     y->right = x;
     x->p = y;
+
+    return y;
 }    
 
 T_node
 rbt_insert(T_tree tree, int k)
 {
-    T_node node = t_insert(tree, k);
+    T_node node = bst_insert(tree, k);
     node->rbt_color = RBT_COLOR_RED;
     rbt_insert_fix(tree, node);
     return node;
@@ -371,6 +411,89 @@ rbt_delete_fix(T_tree tree, T_node node)
         }
     }
     node->rbt_color = RBT_COLOR_BLACK;
+}
+
+T_node
+avl_insert(T_tree tree, int k)
+{
+    T_node node = bst_insert(tree, k);
+    node->avl_bf = AVL_BALANCED;
+    avl_insert_fix(tree, node);        
+    return node;
+}
+
+void
+avl_delete(T_tree tree, T_node* nodep)
+{
+}
+
+void
+avl_insert_fix(T_tree tree, T_node node)
+{
+    for (T_node x = node->p; x != tree->t_nil; x = node->p) {
+        if (node == x->right) {
+            if (x->avl_bf == AVL_RIGHT_HEAVY) {
+                if (node->avl_bf == AVL_LEFT_HEAVY) {
+                    T_node y = node->left;
+                    t_right_rotate(tree, node);
+                    t_left_rotate(tree, x);
+                    
+                    if (y->avl_bf == AVL_LEFT_HEAVY) {
+                        x->avl_bf = AVL_BALANCED;
+                        node->avl_bf = AVL_RIGHT_HEAVY;
+                    } else if (y->avl_bf == AVL_RIGHT_HEAVY) {
+                        x->avl_bf = AVL_LEFT_HEAVY;
+                        node->avl_bf = AVL_BALANCED;
+                    }
+                    
+                    y->avl_bf = AVL_BALANCED;
+                } else {
+                    t_left_rotate(tree, x);
+                    x->avl_bf = AVL_BALANCED;
+                    node->avl_bf = AVL_BALANCED;
+                }
+                break;
+            } else {
+                if (x->avl_bf == AVL_LEFT_HEAVY) {
+                    x->avl_bf = AVL_BALANCED;
+                    break;
+                }
+                x->avl_bf = AVL_RIGHT_HEAVY;
+                node = x;
+            }
+        } else {
+            if (x->avl_bf == AVL_LEFT_HEAVY) {
+                if (node->avl_bf == AVL_RIGHT_HEAVY) {
+                    T_node y = node->right;
+                    t_left_rotate(tree, node);
+                    t_right_rotate(tree, x);
+                    
+                    if (y->avl_bf == AVL_RIGHT_HEAVY) {
+                        x->avl_bf = AVL_BALANCED;
+                        node->avl_bf = AVL_LEFT_HEAVY;
+                    } else if (y->avl_bf == AVL_LEFT_HEAVY) {
+                        x->avl_bf = AVL_RIGHT_HEAVY;
+                        node->avl_bf = AVL_BALANCED;
+                    }
+                    
+                    y->avl_bf = AVL_BALANCED;
+                    
+                } else {
+                    t_right_rotate(tree, x);
+                    x->avl_bf = AVL_BALANCED;
+                    node->avl_bf = AVL_BALANCED;
+                }
+                break;
+            } else {
+                if (x->avl_bf == AVL_RIGHT_HEAVY) {
+                    x->avl_bf = AVL_BALANCED;
+                    break;
+                }
+                x->avl_bf = AVL_LEFT_HEAVY;
+                node = x;
+            }
+        }
+    }
 }
 
 char* color_helper(int color)
