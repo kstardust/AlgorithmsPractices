@@ -66,5 +66,6 @@ void   avl_delete(T_tree tree, T_node* nodep);
 
 void print_tree_preorder(T_tree tree);
 void print_tree_inorder(T_tree tree);
+int tree_height(T_tree tree);
 
 #endif

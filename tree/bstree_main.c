@@ -17,22 +17,21 @@ int main(int argc, char **argv)
     
     /* exit(0); */
     
-    T_tree tree = create_tree(TYPE_RB_TREE);
+    T_tree tree = create_tree(TYPE_BS_TREE);
     T_node n, m;
     int arra[10] = {12, 52, 1, 47, 14, 59, 64, 79, 30, 69};
-    for (int i = 0; i < 10; i++) {
-        int k = arc4random() % 200;
+    for (int i = 0; i < 10000; i++) {
+        int k = arc4random() % 2000000000;
         //    printf("%d\n",k);
         //        arra[i] = k;
-        if (arra[i] == 12)
-            n = rbt_insert(tree, arra[i]);
-        else if (arra[i] == 30)
-            m = t_insert(tree, arra[i]);
-        else
-            t_insert(tree, arra[i]);
+        /* if (arra[i] == 12) */
+        /*     n = rbt_insert(tree, arra[i]); */
+        /* else if (arra[i] == 30) */
+        /*     m = t_insert(tree, arra[i]); */
+        /* else */
+            t_insert(tree, i);
     }
-    t_delete(tree, &m);
-    t_delete(tree, &n);
+    
     //    t_right_rotate(tree, n);
     /* for (int i = 0; i < 5; i++) { */
     /*     printf("--%d\n", arra[i]); */
@@ -47,11 +46,12 @@ int main(int argc, char **argv)
     /*     } */
     /* } */
     
-    printf("-----pre\n");
-    print_tree_preorder(tree);
-    printf("-----in\n");
-    print_tree_inorder(tree);
-    
+    /* printf("-----pre\n"); */
+    /* print_tree_preorder(tree); */
+    /* printf("-----in\n"); */
+    /* print_tree_inorder(tree); */
+
+    printf("depth: %d\n", tree_height(tree));
     printf("max: %d\n", t_maximum(tree)->v);
     printf("2max: %d\n", t_predecessor(tree, t_maximum(tree))->v);
 }

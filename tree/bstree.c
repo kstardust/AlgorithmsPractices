@@ -8,10 +8,13 @@
 
 T_node _t_maximum(T_node p, T_node tnil);
 T_node _t_minimum(T_node p, T_node tnil);
+int _node_height(T_node node, T_node nil);
+
 void rbt_insert_fix(T_tree tree, T_node node);
 void rbt_delete_fix(T_tree tree, T_node node);
 void avl_insert_fix(T_tree tree, T_node node);
 void avl_delete_fix(T_tree tree, T_node node);
+
 
 void*
 t_malloc(size_t size)
@@ -544,3 +547,20 @@ print_tree_inorder(T_tree tree)
     _print_tree_inorder(node, tree->t_nil);
 }
 
+int
+_node_height(T_node node, T_node nil)
+{
+    int depth = 0;
+    if (node != nil) {
+        int ld = 1 + _node_height(node->left, nil);
+        int rd = 1 + _node_height(node->right, nil);
+        depth = (ld > rd ? ld : rd);
+    }
+    return depth;
+}
+
+int
+tree_height(T_tree tree)
+{
+    return _node_height(tree->root, tree->t_nil);
+}
