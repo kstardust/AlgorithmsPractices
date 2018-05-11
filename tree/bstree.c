@@ -428,6 +428,25 @@ avl_insert(T_tree tree, int k)
 void
 avl_delete(T_tree tree, T_node* nodep)
 {
+    T_node p = (*nodep)->p;
+    bst_delete(tree, nodep);
+    if (*nodep == p->left) {
+        if (p->avl_bf == AVL_BALANCED) {
+            p->avl_bf = AVL_RIGHT_HEAVY;
+        } else if (p->avl_bf == AVL_LEFT_HEAVY) {
+            p->avl_bf = AVL_BALANCED;
+        } else {
+            avl_delete_fix(tree, p);
+        }        
+    } else if (*nodep == p->right) {
+        if (p->avl_bf == AVL_BALANCED) {
+            p->avl_bf = AVL_LEFT_HEAVY;
+        } else if (p->avl_bf == AVL_RIGHT_HEAVY) {
+            p->avl_bf = AVL_BALANCED;            
+        } else {
+            avl_delete_fix(tree, p);            
+        }
+    }
 }
 
 void
@@ -493,6 +512,93 @@ avl_insert_fix(T_tree tree, T_node node)
                     break;
                 }
                 x->avl_bf = AVL_LEFT_HEAVY;
+                node = x;
+            }
+        }
+    }
+}
+
+void
+avl_delete_fix(T_tree tree, T_node node)
+{
+    for (T_node x = node->p; x != tree->t_nil; x = x->p) {
+        if (node == x->left) {
+            if (x->avl_bf == AVL_RIGHT_HEAVY) {
+                T_node sibling = x->right;
+                
+                if (sibling->avl_bf == AVL_LEFT_HEAVY) {
+                    T_node y = sibling->left;
+                    t_right_rotate(tree, sibling);
+                    t_left_rotate(tree, x);
+                    
+                    if (y->avl_bf == AVL_BALANCED) {
+                        x->avl_bf = AVL_BALANCED;
+                        sibling->avl_bf = AVL_BALANCED;
+                    } else if (y->avl_bf == AVL_LEFT_HEAVY) {
+                        x->avl_bf = AVL_BALANCED;
+                        sibling->avl_bf = AVL_RIGHT_HEAVY;
+                    } else if (y->avl_bf == AVL_RIGHT_HEAVY) {
+                        x->avl_bf = AVL_LEFT_HEAVY;
+                        sibling->avl_bf = AVL_BALANCED;
+                    }
+                    y->avl_bf = AVL_BALANCED;
+                    
+                } else {
+                    t_left_rotate(tree, x);
+                    if (sibling->avl_bf == AVL_BALANCED) {
+                        sibling->avl_bf = AVL_LEFT_HEAVY;
+                        x->avl_bf = AVL_RIGHT_HEAVY;
+                    } else {
+                        sibling->avl_bf = AVL_BALANCED;
+                        x->avl_bf = AVL_BALANCED;
+                    }
+                }
+                break;
+            } else {
+                if (x->avl_bf == AVL_BALANCED) {
+                    x->avl_bf = AVL_RIGHT_HEAVY;
+                    break;
+                }
+                x->avl_bf = AVL_BALANCED;
+                node = x;
+            }
+            
+        } else {
+            if (x->avl_bf == AVL_LEFT_HEAVY) {
+                T_node sibling = x->left;                
+                if (sibling->avl_bf == AVL_RIGHT_HEAVY) {
+                    T_node y = sibling->right;
+                    t_left_rotate(tree, sibling);
+                    t_right_rotate(tree, x);
+                    
+                    if (y->avl_bf == AVL_BALANCED) {
+                        x->avl_bf = AVL_BALANCED;
+                        sibling->avl_bf = AVL_BALANCED;
+                    } else if (y->avl_bf == AVL_LEFT_HEAVY) {
+                        x->avl_bf = AVL_RIGHT_HEAVY;
+                        sibling->avl_bf = AVL_BALANCED;
+                    } else if (y->avl_bf == AVL_RIGHT_HEAVY) {
+                        x->avl_bf = AVL_BALANCED;
+                        sibling->avl_bf = AVL_LEFT_HEAVY;
+                    }
+                    y->avl_bf = AVL_BALANCED;
+                } else {
+                    t_right_rotate(tree, x);
+                    if (sibling->avl_bf == AVL_BALANCED) {
+                        sibling->avl_bf = AVL_RIGHT_HEAVY;
+                        x->avl_bf = AVL_LEFT_HEAVY;
+                    } else {
+                        sibling->avl_bf = AVL_BALANCED;
+                        x->avl_bf = AVL_BALANCED;
+                    }
+                }
+                break;
+            } else {
+                if (x->avl_bf == AVL_BALANCED) {
+                    x->avl_bf = AVL_LEFT_HEAVY;
+                    break;
+                }
+                x->avl_bf = AVL_BALANCED;
                 node = x;
             }
         }
