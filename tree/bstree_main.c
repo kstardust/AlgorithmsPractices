@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "bstree.h"
-
 int main(int argc, char **argv)
 {
     /* struct t_node node; */
@@ -17,31 +16,47 @@ int main(int argc, char **argv)
     
     /* exit(0); */
     
-    T_tree tree = create_tree(TYPE_AVL_TREE);
+    T_tree tree = create_tree(TYPE_BS_TREE);
     T_node n, m;
-    int arra[10] = {
-    141,
-    118,
-    44,
-    9,
-    10,
-    195,
-    151,
-    120,
-    146,
-    196,
+    int arra[] = {
+55,
+21,
+82,
+7,
+5,
+76,
+69,
+74,
+70,
+96,
+93,
+43,
+63,
+14,
+24,
+53,
+93,
+14,
+85,
+15,
+0,
     };
-    T_node nodes[10];
-    for (int i = 0; i < 10; i++) {
-        int k = arc4random() % 200;
-        printf("%d\n",k);
+    const int max = 1000;
+    T_node nodes[max];
+    for (int i = 0; i < max; i++) {
+        int k = arc4random() % 100000;
+        //        printf("%d\n",k);
         //        arra[i] = k;
         /* if (arra[i] == 12) */
         /*     n = rbt_insert(tree, arra[i]); */
         /* else if (arra[i] == 30) */
         /*     m = t_insert(tree, arra[i]); */
         /* else */
-        nodes[i] = t_insert(tree, arra[i]);
+        nodes[i] = t_insert(tree, k);
+        /* printf("-----pre\n"); */
+        /* print_tree_preorder(tree); */
+        /* printf("-----in\n"); */
+        /* print_tree_inorder(tree); */
     }
 
     //    t_right_rotate(tree, n);
@@ -50,28 +65,30 @@ int main(int argc, char **argv)
     /*     T_node node = t_search(tree, arra[i]); */
     /*     t_delete(tree, &node); */
     /* } */
-    printf("-----pre\n");
-    print_tree_preorder(tree);
-    printf("-----in\n");
-    print_tree_inorder(tree);
+    //    return 0;
+    /* printf("-----pre\n"); */
+    /* print_tree_preorder(tree); */
+    /* printf("-----in\n"); */
+    /* print_tree_inorder(tree); */
     
-    for (int i = 0; i < 1000; i++ ) {
-        int k = arc4random() % 100000;
-        if (k > 10) {
-            printf("%d\n", nodes[i]->v);
+    for (int i = 0; i < max; i++ ) {
+        //        printf("%d\n", i);
+        int k = arc4random() % 10000;
+        if (k > 100) {
+            //            printf("-%d\n", nodes[i]->v);
             t_delete(tree, nodes+i);
         }
-    printf("-----pre\n");
-    print_tree_preorder(tree);
-    printf("-----in\n");
-    print_tree_inorder(tree);
+    /* printf("-----pre\n"); */
+    /* print_tree_preorder(tree); */
+    /* printf("-----in\n"); */
+    /* print_tree_inorder(tree); */
     }
-    return 0;
+
     printf("-----pre\n");
     print_tree_preorder(tree);
     printf("-----in\n");
     print_tree_inorder(tree);
-
+    return 0;
     printf("depth: %d\n", tree_height(tree));
     printf("max: %d\n", t_maximum(tree)->v);
     printf("2max: %d\n", t_predecessor(tree, t_maximum(tree))->v);

@@ -3,6 +3,9 @@
 #include <string.h>
 #include <stdio.h>
 
+#define LEFT  1
+#define RIGHT 2
+
 #define ERR_EXIT(x) \
     do { perror(x); exit(1); } while (0) 
 
@@ -13,7 +16,7 @@ int _node_height(T_node node, T_node nil);
 void rbt_insert_fix(T_tree tree, T_node node);
 void rbt_delete_fix(T_tree tree, T_node node);
 void avl_insert_fix(T_tree tree, T_node node);
-void avl_delete_fix(T_tree tree, T_node node);
+void avl_delete_fix(T_tree tree, T_node node, int position);
 
 
 void*
@@ -428,24 +431,41 @@ avl_insert(T_tree tree, int k)
 void
 avl_delete(T_tree tree, T_node* nodep)
 {
-    T_node p = (*nodep)->p;
-    bst_delete(tree, nodep);
-    if (*nodep == p->left) {
-        if (p->avl_bf == AVL_BALANCED) {
-            p->avl_bf = AVL_RIGHT_HEAVY;
-        } else if (p->avl_bf == AVL_LEFT_HEAVY) {
-            p->avl_bf = AVL_BALANCED;
+    T_node node = *nodep;
+    T_node tmp_node = node->p;
+    int position = 0;
+    if (node == node->p->right) {
+        position = RIGHT;
+    } else if (node == node->p->left) {
+        position = LEFT;
+    }
+    if (node) {
+        if (node->left == tree->t_nil) {
+            t_transplant(tree, node, node->right);
+        } else if (node->right == tree->t_nil) {
+            t_transplant(tree, node, node->left);
         } else {
-            avl_delete_fix(tree, p);
-        }        
-    } else if (*nodep == p->right) {
-        if (p->avl_bf == AVL_BALANCED) {
-            p->avl_bf = AVL_LEFT_HEAVY;
-        } else if (p->avl_bf == AVL_RIGHT_HEAVY) {
-            p->avl_bf = AVL_BALANCED;            
-        } else {
-            avl_delete_fix(tree, p);            
+            T_node suc = _t_minimum(node->right, tree->t_nil);
+            tmp_node = suc;
+            if (suc == suc->p->right) {
+                position = RIGHT;
+            } else if (suc == suc->p->left) {
+                position = LEFT;
+            }
+            if (suc->p != node) {
+                tmp_node = suc->p;
+                t_transplant(tree, suc, suc->right);
+                suc->right = node->right;
+                suc->right->p = suc;
+            }
+            t_transplant(tree, node, suc);
+            suc->avl_bf = node->avl_bf;
+            suc->left = node->left;
+            node->left->p = suc;
         }
+        free(node);
+        *nodep = NULL;
+        avl_delete_fix(tree, tmp_node, position);        
     }
 }
 
@@ -465,6 +485,9 @@ avl_insert_fix(T_tree tree, T_node node)
                         node->avl_bf = AVL_RIGHT_HEAVY;
                     } else if (y->avl_bf == AVL_RIGHT_HEAVY) {
                         x->avl_bf = AVL_LEFT_HEAVY;
+                        node->avl_bf = AVL_BALANCED;
+                    } else {
+                        x->avl_bf = AVL_BALANCED;
                         node->avl_bf = AVL_BALANCED;
                     }
                     
@@ -496,6 +519,9 @@ avl_insert_fix(T_tree tree, T_node node)
                     } else if (y->avl_bf == AVL_LEFT_HEAVY) {
                         x->avl_bf = AVL_RIGHT_HEAVY;
                         node->avl_bf = AVL_BALANCED;
+                    } else {
+                        x->avl_bf = AVL_BALANCED;
+                        node->avl_bf = AVL_BALANCED;
                     }
                     
                     y->avl_bf = AVL_BALANCED;
@@ -519,17 +545,25 @@ avl_insert_fix(T_tree tree, T_node node)
 }
 
 void
-avl_delete_fix(T_tree tree, T_node node)
+avl_delete_fix(T_tree tree, T_node node, int position)
 {
-    for (T_node x = node->p; x != tree->t_nil; x = x->p) {
-        if (node == x->left) {
+    T_node x = node;
+    if (position == RIGHT) {
+        node = x->right;
+    } else if (position == LEFT) {
+        node = x->left;
+    }
+    T_node p;
+    for (; x != tree->t_nil; x = p) {
+        p = x->p; 
+        if (position == LEFT || (node == x->left && position == 0)) {
             if (x->avl_bf == AVL_RIGHT_HEAVY) {
                 T_node sibling = x->right;
                 
                 if (sibling->avl_bf == AVL_LEFT_HEAVY) {
                     T_node y = sibling->left;
                     t_right_rotate(tree, sibling);
-                    t_left_rotate(tree, x);
+                    node = t_left_rotate(tree, x);
                     
                     if (y->avl_bf == AVL_BALANCED) {
                         x->avl_bf = AVL_BALANCED;
@@ -542,18 +576,17 @@ avl_delete_fix(T_tree tree, T_node node)
                         sibling->avl_bf = AVL_BALANCED;
                     }
                     y->avl_bf = AVL_BALANCED;
-                    
                 } else {
-                    t_left_rotate(tree, x);
+                    node = t_left_rotate(tree, x);
                     if (sibling->avl_bf == AVL_BALANCED) {
                         sibling->avl_bf = AVL_LEFT_HEAVY;
                         x->avl_bf = AVL_RIGHT_HEAVY;
+                        break;
                     } else {
                         sibling->avl_bf = AVL_BALANCED;
                         x->avl_bf = AVL_BALANCED;
                     }
                 }
-                break;
             } else {
                 if (x->avl_bf == AVL_BALANCED) {
                     x->avl_bf = AVL_RIGHT_HEAVY;
@@ -562,14 +595,13 @@ avl_delete_fix(T_tree tree, T_node node)
                 x->avl_bf = AVL_BALANCED;
                 node = x;
             }
-            
         } else {
             if (x->avl_bf == AVL_LEFT_HEAVY) {
                 T_node sibling = x->left;                
                 if (sibling->avl_bf == AVL_RIGHT_HEAVY) {
                     T_node y = sibling->right;
                     t_left_rotate(tree, sibling);
-                    t_right_rotate(tree, x);
+                    node = t_right_rotate(tree, x);
                     
                     if (y->avl_bf == AVL_BALANCED) {
                         x->avl_bf = AVL_BALANCED;
@@ -583,16 +615,16 @@ avl_delete_fix(T_tree tree, T_node node)
                     }
                     y->avl_bf = AVL_BALANCED;
                 } else {
-                    t_right_rotate(tree, x);
+                    node = t_right_rotate(tree, x);
                     if (sibling->avl_bf == AVL_BALANCED) {
                         sibling->avl_bf = AVL_RIGHT_HEAVY;
                         x->avl_bf = AVL_LEFT_HEAVY;
+                        break;
                     } else {
                         sibling->avl_bf = AVL_BALANCED;
                         x->avl_bf = AVL_BALANCED;
                     }
                 }
-                break;
             } else {
                 if (x->avl_bf == AVL_BALANCED) {
                     x->avl_bf = AVL_LEFT_HEAVY;
@@ -602,6 +634,7 @@ avl_delete_fix(T_tree tree, T_node node)
                 node = x;
             }
         }
+        position = 0;
     }
 }
 
@@ -612,6 +645,12 @@ char* color_helper(int color)
         return "black";
     case RBT_COLOR_RED:
         return "red";
+    case AVL_BALANCED:
+        return "balanced";
+    case AVL_LEFT_HEAVY:
+        return "left heavy";
+    case AVL_RIGHT_HEAVY:
+        return "right heavy";
     default:
         return "undefined";
     }

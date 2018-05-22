@@ -5,8 +5,8 @@
 #define TYPE_RB_TREE  0x02
 #define TYPE_AVL_TREE 0x04
 
-#define RBT_COLOR_BLACK 0x1
-#define RBT_COLOR_RED   0x2
+#define RBT_COLOR_BLACK 0x08
+#define RBT_COLOR_RED   0x10
 
 #define AVL_BALANCED     0
 #define AVL_LEFT_HEAVY  -1
