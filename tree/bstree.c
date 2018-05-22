@@ -432,7 +432,15 @@ void
 avl_delete(T_tree tree, T_node* nodep)
 {
     T_node node = *nodep;
-    T_node tmp_node = node->p;
+    T_node action_node = node->p;
+
+    /* The action position is a reference to the parent node from 
+       which a node has been physically removed
+
+       The action position indicate the first node whose height has 
+       been affected (possibly changed) by the deletion 
+    */
+    
     int position = 0;
     if (node == node->p->right) {
         position = RIGHT;
@@ -446,14 +454,14 @@ avl_delete(T_tree tree, T_node* nodep)
             t_transplant(tree, node, node->left);
         } else {
             T_node suc = _t_minimum(node->right, tree->t_nil);
-            tmp_node = suc;
+            action_node = suc;
             if (suc == suc->p->right) {
                 position = RIGHT;
             } else if (suc == suc->p->left) {
                 position = LEFT;
             }
             if (suc->p != node) {
-                tmp_node = suc->p;
+                action_node = suc->p;
                 t_transplant(tree, suc, suc->right);
                 suc->right = node->right;
                 suc->right->p = suc;
@@ -465,7 +473,7 @@ avl_delete(T_tree tree, T_node* nodep)
         }
         free(node);
         *nodep = NULL;
-        avl_delete_fix(tree, tmp_node, position);        
+        avl_delete_fix(tree, action_node, position);
     }
 }
 
@@ -555,7 +563,12 @@ avl_delete_fix(T_tree tree, T_node node, int position)
     }
     T_node p;
     for (; x != tree->t_nil; x = p) {
-        p = x->p; 
+        p = x->p;
+        /* 
+           The right and left child of a leaf node(nodes have no child) are
+           the same(both equal to tree->t_nil). so we use position for the 
+           first navigation.
+        */
         if (position == LEFT || (node == x->left && position == 0)) {
             if (x->avl_bf == AVL_RIGHT_HEAVY) {
                 T_node sibling = x->right;

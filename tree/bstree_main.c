@@ -16,7 +16,7 @@ int main(int argc, char **argv)
     
     /* exit(0); */
     
-    T_tree tree = create_tree(TYPE_BS_TREE);
+    T_tree tree = create_tree(TYPE_AVL_TREE);
     T_node n, m;
     int arra[] = {
 55,
