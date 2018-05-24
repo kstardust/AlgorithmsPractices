@@ -30,7 +30,8 @@ class TreeVisualizer(object):
         nodes = 2**depth
         self.width = nodes*Config.node_size + Config.interspace*(nodes+1)
         self.height = depth*Config.node_size + Config.interspace*(depth+2)
-        self.img = np.ones([self.height, self.width, 3], dtype='float32')
+        self.img = np.ones([self.height, self.width, 3], dtype=np.uint8)
+        self.img[:] = 255
 
     def draw(self):
         self._draw(self.tree)
@@ -83,7 +84,7 @@ class TreeVisualizer(object):
         img = self.img
         cv2.imshow("Tree", img)
         img = cv2.cvtColor(self.img, cv2.COLOR_BGR2RGB)
-#        cv2.imwrite("test.png", img)
+        cv2.imwrite("test.png", self.img)
         cv2.waitKey(0)
 
     @classmethod
@@ -132,7 +133,7 @@ def _build_from_istree(tree, root, node):
         color = left.contents._data.color
         left_node.color = 'r' if \
                           color == istree_py.RBT_COLOR_RED else 'b'
-        left_node.p = root
+        left_node.p = node
         _build_from_istree(tree, left, left_node)
         node.left = left_node
     if not istree_py.is_nil_node(tree, right):
@@ -140,7 +141,7 @@ def _build_from_istree(tree, root, node):
         color = right.contents._data.color
         right_node.color = 'r' if \
                            color == istree_py.RBT_COLOR_RED else 'b'
-        right_node.p = root
+        right_node.p = node
         _build_from_istree(tree, right, right_node)
         node.right = right_node
 
@@ -179,12 +180,17 @@ def draw_tree(preorder_it, inorder_it, preorder_color=None):
     panel.draw()
     panel.show()
 
-    
-# PREORDER_it = [47780, 43433, 45065, 60825, 67992, 99752]
+
+# preorder_it = [47780, 43433, 45065, 60825, 67992, 99752]
 # inorder_it = [43433, 45065, 47780, 52098, 60825, 67992, 99752]
 # preorder_color = ['b', 'b', 'r', 'r', 'b', 'b', 'r']
 # draw_tree(preorder_it, inorder_it, preorder_color)
-tree = istree_py.create_tree(istree_py.TYPE_AVL_TREE)
-for _ in range(10):
-    k = np.random.randint(0, 100)
+tree = istree_py.create_tree(istree_py.TYPE_RB_TREE)
+for _ in range(30):
+    k = np.random.randint(0, 1000)
     istree_py.t_insert(tree, k)
+
+ptree = build_from_istree(tree)
+panel = TreeVisualizer(ptree)
+panel.draw()
+panel.show()
