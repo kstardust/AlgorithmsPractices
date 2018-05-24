@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import istree_py
 
 
 class Config(object):
@@ -10,7 +11,7 @@ class Config(object):
 class Node(object):
     def __init__(self, v, x=0, y=0, color='b'):
         self.left = None
-        self.right = None        
+        self.right = None
         self.v = v
         self.p = None
         self.x = x
@@ -68,7 +69,8 @@ class TreeVisualizer(object):
             else:
                 color = (0, 0, 0)
 
-            img = cv2.circle(self.img, t.center, int(Config.node_size/2), color, -1, cv2.LINE_8, 0)
+            img = cv2.circle(self.img, t.center, int(Config.node_size/2),
+                             color, -1, cv2.LINE_8, 0)
             box, baseLine = cv2.getTextSize(str(t.v), fontFace, fontScale, thickness)
             org = (int(t.x-box[0]/2), int(t.y+box[1]/2))
             img = cv2.putText(self.img, str(t.v), org,
@@ -121,10 +123,44 @@ def build_tree(preorder_it, inorder_it, preorder_color):
                        inorder_it, 0, len(preorder_it)-1, None, preorder_color)
 
 
+def _build_from_istree(tree, root, node):
+    left = root.contents.left
+    right = root.contents.right
+
+    if not istree_py.is_nil_node(tree, left):
+        left_node = Node(left.contents.v)
+        color = left.contents._data.color
+        left_node.color = 'r' if \
+                          color == istree_py.RBT_COLOR_RED else 'b'
+        left_node.p = root
+        _build_from_istree(tree, left, left_node)
+        node.left = left_node
+    if not istree_py.is_nil_node(tree, right):
+        right_node = Node(right.contents.v)
+        color = right.contents._data.color
+        right_node.color = 'r' if \
+                           color == istree_py.RBT_COLOR_RED else 'b'
+        right_node.p = root
+        _build_from_istree(tree, right, right_node)
+        node.right = right_node
+
+
+def build_from_istree(tree):
+    root = tree.contents.root
+    if istree_py.is_nil_node(tree, root):
+        return None
+    node = Node(root.contents.v)
+    color = root.contents._data.color
+    node.color = 'r' if color == istree_py.RBT_COLOR_RED else 'b'
+    node.p = None
+    _build_from_istree(tree, root, node)
+    return node
+
+
 def pre_order(node):
     if node is None:
         return
-    print(node.v)
+    print(node.v, node.color)
     pre_order(node.left)
     pre_order(node.right)
 
@@ -133,7 +169,7 @@ def in_order(node):
     if node is None:
         return
     in_order(node.left)
-    print(node.v)
+    print(node.v, node.color)
     in_order(node.right)
 
 
@@ -143,7 +179,12 @@ def draw_tree(preorder_it, inorder_it, preorder_color=None):
     panel.draw()
     panel.show()
 
-preorder_it = [47780, 43433, 45065, 60825, 67992, 99752]
-inorder_it = [43433, 45065, 47780, 52098, 60825, 67992, 99752]
-preorder_color = ['b', 'b', 'r', 'r', 'b', 'b', 'r']
-draw_tree(preorder_it, inorder_it, preorder_color)
+    
+# PREORDER_it = [47780, 43433, 45065, 60825, 67992, 99752]
+# inorder_it = [43433, 45065, 47780, 52098, 60825, 67992, 99752]
+# preorder_color = ['b', 'b', 'r', 'r', 'b', 'b', 'r']
+# draw_tree(preorder_it, inorder_it, preorder_color)
+tree = istree_py.create_tree(istree_py.TYPE_AVL_TREE)
+for _ in range(10):
+    k = np.random.randint(0, 100)
+    istree_py.t_insert(tree, k)

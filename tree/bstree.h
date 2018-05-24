@@ -68,4 +68,7 @@ void print_tree_preorder(T_tree tree);
 void print_tree_inorder(T_tree tree);
 int tree_height(T_tree tree);
 
+int is_nil_node(T_tree tree, T_node node);
+/* for Python, because ctypes doesn't have original object return */
+
 #endif

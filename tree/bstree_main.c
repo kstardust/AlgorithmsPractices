@@ -16,7 +16,8 @@ int main(int argc, char **argv)
     
     /* exit(0); */
     
-    T_tree tree = create_tree(TYPE_AVL_TREE);
+    T_tree tree = create_tree(TYPE_RB_TREE);
+    printf("%d\n", t_maximum(tree)->v);
     T_node n, m;
     int arra[] = {
 55,
@@ -41,7 +42,7 @@ int main(int argc, char **argv)
 15,
 0,
     };
-    const int max = 1000;
+    const int max = 10000;
     T_node nodes[max];
     for (int i = 0; i < max; i++) {
         int k = arc4random() % 100000;
@@ -74,7 +75,7 @@ int main(int argc, char **argv)
     for (int i = 0; i < max; i++ ) {
         //        printf("%d\n", i);
         int k = arc4random() % 10000;
-        if (k > 100) {
+        if (k > 10) {
             //            printf("-%d\n", nodes[i]->v);
             t_delete(tree, nodes+i);
         }

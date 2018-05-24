@@ -35,6 +35,8 @@ create_tree(int type)
     T_tree tree = (T_tree)t_malloc(sizeof(struct t_tree));
     T_node nil_node = (T_node)t_malloc(sizeof(struct t_node));
     bzero(nil_node, sizeof(struct t_node));
+    nil_node->left = nil_node;
+    nil_node->right = nil_node;
     tree->t_nil = nil_node;
     tree->root = nil_node;
     tree->type = type;
@@ -62,6 +64,8 @@ t_insert(T_tree tree, int k)
 void
 t_delete(T_tree tree, T_node* nodep)
 {
+    if (!nodep || *nodep == tree->t_nil)
+        return;
     switch (tree->type) {
     case TYPE_RB_TREE:
         rbt_delete(tree, nodep);
@@ -168,25 +172,23 @@ void
 bst_delete(T_tree tree, T_node* nodep)
 {
     T_node node = *nodep;
-    if (node) {    
-        if (node->left == tree->t_nil) {
-            t_transplant(tree, node, node->right);
-        } else if (node->right == tree->t_nil) {
-            t_transplant(tree, node, node->left);
-        } else {
-            T_node suc = _t_minimum(node->right, tree->t_nil);
-            if (suc->p != node) {
-                t_transplant(tree, suc, suc->right);
-                suc->right = node->right;
-                suc->right->p = suc;
-            }
-            t_transplant(tree, node, suc);
-            suc->left = node->left;
-            node->left->p = suc;
+    if (node->left == tree->t_nil) {
+        t_transplant(tree, node, node->right);
+    } else if (node->right == tree->t_nil) {
+        t_transplant(tree, node, node->left);
+    } else {
+        T_node suc = _t_minimum(node->right, tree->t_nil);
+        if (suc->p != node) {
+            t_transplant(tree, suc, suc->right);
+            suc->right = node->right;
+            suc->right->p = suc;
         }
-        free(node);
-        *nodep = NULL;
+        t_transplant(tree, node, suc);
+        suc->left = node->left;
+        node->left->p = suc;
     }
+    free(node);
+    *nodep = NULL;
 }
 
 T_node
@@ -329,35 +331,33 @@ rbt_delete(T_tree tree, T_node* nodep)
     y = node;
     int y_original_color = y->rbt_color;
     
-    if (node) {
-        if (node->left == tree->t_nil) {
-            x = node->right;
-            t_transplant(tree, node, node->right);
-        } else if (node->right == tree->t_nil) {
-            x = node->left;
-            t_transplant(tree, node, node->left);
+    if (node->left == tree->t_nil) {
+        x = node->right;
+        t_transplant(tree, node, node->right);
+    } else if (node->right == tree->t_nil) {
+        x = node->left;
+        t_transplant(tree, node, node->left);
+    } else {
+        y = _t_minimum(node->right, tree->t_nil);
+        y_original_color = y->rbt_color;
+        x = y->right;
+        if (y->p == node) {
+            x->p = y;
         } else {
-            y = _t_minimum(node->right, tree->t_nil);
-            y_original_color = y->rbt_color;
-            x = y->right;
-            if (y->p == node) {
-                x->p = y;
-            } else {
-                t_transplant(tree, y, y->right);
-                y->right = node->right;
-                y->right->p = y;
-            }
-            t_transplant(tree, node, y);
-            y->left = node->left;
-            y->left->p = y;
-            y->rbt_color = node->rbt_color;
+            t_transplant(tree, y, y->right);
+            y->right = node->right;
+            y->right->p = y;
         }
-        if (y_original_color == RBT_COLOR_BLACK) {
-            rbt_delete_fix(tree, x);
-        }
-        free(node);
-        *nodep = NULL;
+        t_transplant(tree, node, y);
+        y->left = node->left;
+        y->left->p = y;
+        y->rbt_color = node->rbt_color;
     }
+    if (y_original_color == RBT_COLOR_BLACK) {
+        rbt_delete_fix(tree, x);
+    }
+    free(node);
+    *nodep = NULL;
 }
 
 void
@@ -721,4 +721,10 @@ int
 tree_height(T_tree tree)
 {
     return _node_height(tree->root, tree->t_nil);
+}
+
+int
+is_nil_node(T_tree tree, T_node node)
+{
+    return tree->t_nil == node;
 }
